@@ -1,90 +1,101 @@
-# Auto Bot LinkedIn Job (Discord Edition)
+# 🚀 Auto Bot LinkedIn Job (Discord Edition)
 
-US job-signal hunter. Scores listings against operator positioning.
-Outreach is human-gated via Discord.
-
-## Overview
-Auto Bot LinkedIn Job is a research engine, not an auto-applier. It pulls US job listings across 5 job sources, drops non-US roles, filters by keywords, deduplicates against an append-only ledger, scores survivors against the operator's positioning memory, logs opportunities to storage, and pushes actionable hot cards directly to **Discord**.
-
-No application or message is ever sent to a company without the operator manually reviewing and copy-pasting the draft note.
+An autonomous AI-powered US job research and signal hunter configured for Forward Deployed Engineer, GenAI, and LLM Developer roles. Listings are scraped across LinkedIn and top remote feeds, filtered strictly to the US within the last 24 hours, scored against operator experience using Google Gemini, and human-gated through Discord.
 
 ---
 
-## Discord Setup Options
+## ⚡ How to Run & Restart the Bot
 
-You can connect Discord using either of the following methods:
+If you close your computer, terminal, or IDE, you can restart the system anytime using either of the following methods:
 
-### Option 1: Instant Discord Webhook (30-Second Setup)
-*Zero bot hosting needed. Pushes color-coded rich embeds with direct links for job postings and LinkedIn searches.*
-1. In your Discord server, open **Channel Settings** (gear icon) $\rightarrow$ **Integrations** $\rightarrow$ **Webhooks** $\rightarrow$ **New Webhook**.
-2. Click **Copy Webhook URL**.
-3. In your `.env` file, paste:
-   ```env
-   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/123456789/abcdef...
-   ```
-4. Run a hunt:
-   ```bash
-   python -m engine.run_hunt
-   ```
-   Hot opportunities and daily digests will immediately appear in your Discord channel!
+### Method 1: Double-Click Launchers (Windows - Easiest)
+Located directly in the project root:
+- **`run_bot.bat`** *(Interactive Discord Bot)*:
+  - Double-click to start the Discord bot service.
+  - Keep the command prompt window open in the background.
+  - The bot will stay online and respond to slash commands (`/hunt`, `/status`, etc.) and card buttons inside your Discord server.
+- **`run_hunt.bat`** *(One-Off Instant Search)*:
+  - Double-click to run an immediate job search across LinkedIn and all feeds.
+  - Automatically posts the summary digest and any hot opportunities to your Discord webhook without needing Discord open.
 
-### Option 2: Interactive Discord Bot (Full Bot with Commands & Buttons)
-*Enables `!hunt`, `!status`, `!help`, and interactive buttons directly inside Discord.*
-1. Visit the [Discord Developer Portal](https://discord.com/developers/applications) and create a New Application.
-2. Under the **Bot** tab:
-   - Click **Reset Token** to get your `DISCORD_BOT_TOKEN`.
-   - Enable **Message Content Intent** under Privileged Gateway Intents.
-3. Under **OAuth2** $\rightarrow$ **URL Generator**:
-   - Scopes: `bot`
-   - Bot Permissions: `Send Messages`, `Embed Links`, `Read Message History`, `View Channels`
-   - Copy the generated URL and open it in your browser to invite the bot to your server.
-4. Add credentials to your `.env`:
-   ```env
-   DISCORD_BOT_TOKEN=YOUR_BOT_TOKEN
+---
+
+### Method 2: Command Line (PowerShell / Terminal)
+1. Open PowerShell or Terminal and navigate to the project directory:
+   ```powershell
+   cd "d:\Linkedin Job"
    ```
-5. Start the bot:
-   ```bash
+2. **Start the Discord bot**:
+   ```powershell
    python -m engine.discord_bot
    ```
+3. *(Alternative)* **Run an immediate hunt without running the bot daemon**:
+   ```powershell
+   python -m engine.run_hunt
+   ```
 
 ---
 
-## Discord Commands & Card Buttons (100% On-Demand)
-The bot operates strictly **on-demand**—it will never search or message unless you explicitly ask it to.
+## 💻 Setting Up on a New Machine
 
-### Slash Commands
-- `/hunt` — Launch a search and score US listings across all 5 feeds right now.
-- `/status` — View your scoreboard (total scored, kept in pipeline, hot alerts).
-- `/hot` — View active top hot opportunities with action buttons.
-- `/draft <listing_id>` — Generate a tailored outreach note for a specific listing.
-- `/help` — Display bot commands and instructions.
+To run this project on a brand new computer:
 
-### Interactive Card Buttons (Score >= 80)
-- **✍️ Draft Outreach**: Gated by a 21-day company cooldown. Generates an 80–130 word plain-text note using Gemini and at most one proof point, ready to copy-paste.
-- **🔗 Open Posting**: One-click direct link to the live job posting.
-- **🔎 Find Contact**: One-click direct link to a pre-filled LinkedIn People Search for the hiring lead (e.g. `VP Revenue Enablement + Company`).
+### 1. Clone the Repository
+```bash
+git clone https://github.com/rvreddy24/Linkedin_Job.git
+cd Linkedin_Job
+```
+
+### 2. Install Python Dependencies
+Make sure Python 3.10+ is installed, then run:
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure Environment Variables
+Create a file named `.env` in the root folder (you can copy `.env.example`):
+```env
+# Google Gemini API Key
+GEMINI_API_KEY=your_gemini_api_key
+
+# Discord Credentials
+DISCORD_BOT_TOKEN=your_bot_token
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+DISCORD_CHANNEL_ID=your_channel_id
+```
+
+> ⚠️ **Security Notice**: Never commit `.env` to Git. The `.gitignore` file is already preconfigured to protect `.env`, `ledger.db`, and local logs from being published.
+
+### 4. Run the Bot
+Double-click `run_bot.bat` or run:
+```powershell
+python -m engine.discord_bot
+```
 
 ---
 
-## Deploy to n8n (Discord Edition)
-1. Open n8n (Cloud or self-hosted).
-2. Click **Import from File** and select `n8n/auto_bot_linkedin_job_discord.json`.
-3. Set your `DISCORD_WEBHOOK_URL` in n8n environment variables or directly inside the Discord HTTP nodes.
-4. Connect your Google Gemini credential (`gemini_cred`).
-5. Activate the workflow!
+## 🎮 Discord Slash Commands & Card Buttons
+
+The bot is strictly **on-demand**—it searches and drafts notes only when requested:
+
+### Available Slash Commands
+- **`/hunt`** — Scrapes fresh US postings from LinkedIn, RemoteOK, Remotive, Jobicy, and Arbeitnow from the past 24 hours, scores them with Gemini, and posts hot opportunities (score ≥ 80).
+- **`/status`** — Displays the ledger scoreboard (total listings scanned, saved to pipeline, hot signal count).
+- **`/hot`** — Lists your current top active hot opportunities with quick action buttons.
+- **`/tailor <listing_id>`** — Generates an 80–130 word tailored outreach message for a specific job card using your resume background.
+- **`/help`** — Displays a quick cheat-sheet of available commands and instructions.
+
+### Interactive Buttons on Hot Cards
+Every job card scoring ≥ 80 features one-click interactive buttons:
+- **✍️ Draft Outreach**: Uses Gemini to generate a personalized outreach note referencing relevant projects and skills.
+- **🔗 Open Posting**: Opens the direct application URL on LinkedIn or company career portal.
+- **🔎 Find Contact**: Opens a pre-filled LinkedIn search for hiring managers and recruiters at the target company.
 
 ---
 
-## Required Credentials Checklist
-- **Discord**: `DISCORD_WEBHOOK_URL` (Option 1) or `DISCORD_BOT_TOKEN` (Option 2).
-- **Google Gemini**: `GEMINI_API_KEY` (Sole AI engine: used for both structured listing scoring and outreach drafting).
-- **JobsPipe** *(Optional)*: `JOBSPIPE_API_KEY` (`jp_live_...`).
-- **Google Sheets** *(Optional)*: Local SQLite ledger is active by default.
+## 🧪 Testing & Verification
 
----
-
-## Testing
-Run the acceptance test suite to verify US filtering, deduplication, cooldown gates, and Discord embed formatting:
+Run the automated test suite to verify feed parsers, location filters, deduplication, and score calculation:
 ```bash
 python -m pytest tests/test_acceptance.py tests/test_feeds.py -v
 ```
