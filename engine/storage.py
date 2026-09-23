@@ -198,11 +198,15 @@ class StorageManager:
             print(f"[Storage] Warning: Failed to sync Pipeline.csv: {e}")
 
     def lookup_pipeline(self, listing_id: str) -> Optional[Dict[str, Any]]:
-        """Lookup a Pipeline item by listing_id."""
+        """Lookup a Pipeline item by listing_id (accepts full ID like 'linkedin:4470667578' or just '4470667578')."""
+        clean_id = str(listing_id or "").strip()
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM pipeline WHERE listing_id = ?", (listing_id,))
+            cursor.execute(
+                "SELECT * FROM pipeline WHERE listing_id = ? OR listing_id LIKE ?",
+                (clean_id, f"%:{clean_id}")
+            )
             row = cursor.fetchone()
             if row:
                 return dict(row)
