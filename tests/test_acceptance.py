@@ -30,11 +30,22 @@ def test_london_and_bengaluru_dropped():
     assert not is_us_listing(country="", location="Singapore", remote=False)
     assert not is_us_listing(country="DE", location="Berlin", remote=False)
 
-    # US cases should pass
+    # Non-US and vague worldwide cases dropped
+    assert not is_us_listing(country="", location="Worldwide Remote", remote=True)
+    assert not is_us_listing(country="", location="Remote", remote=True)
+    assert not is_us_listing(country="", location="Hybrid - Toronto", remote=False)
+    assert not is_us_listing(country="", location="Remote - Europe (CET)", remote=True)
+    assert not is_us_listing(country="", location="Remote - Latin America", remote=True)
+
+    # Confirmed US cases should pass
     assert is_us_listing(country="US", location="Austin, TX", remote=False)
     assert is_us_listing(country="USA", location="Remote", remote=True)
     assert is_us_listing(country="", location="US-Remote", remote=True)
+    assert is_us_listing(country="", location="Remote (US)", remote=True)
     assert is_us_listing(country="", location="San Francisco, CA", remote=False)
+    assert is_us_listing(country="", location="Hybrid - New York, NY", remote=False)
+    assert is_us_listing(country="", location="Seattle, Washington", remote=False)
+    assert is_us_listing(country="", location="Remote", remote=True, description="Must be authorized to work in the US.")
 
 
 def test_fingerprint_deduplication():

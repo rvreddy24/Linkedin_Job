@@ -5,9 +5,28 @@ from datetime import datetime, timezone
 from typing import List, Tuple, Optional
 from engine.models import NormalizedListing
 
-# Regex for non-US indicators
+# Comprehensive regex for non-US indicators (cities, countries, regions, timezones)
 NON_US_PATTERN = re.compile(
-    r"\b(london|bengaluru|bangalore|uk|united kingdom|india|germany|deutschland|singapore|berlin|munich|münchen|frankfurt|darmstadt|hamburg|cologne|köln|stuttgart|paris|france|canada|toronto|vancouver|australia|sydney|melbourne|netherlands|amsterdam|europe|emea|latam|apac|brazil|mexico|poland|spain|madrid|barcelona|ireland|dublin|japan|tokyo|switzerland|zurich|austria|vienna)\b",
+    r"\b("
+    r"london|manchester|birmingham|edinburgh|glasgow|bristol|leeds|cambridge\s*,\s*uk|oxford\s*,\s*uk|"
+    r"uk|united kingdom|great britain|england|scotland|wales|ireland|dublin|belfast|"
+    r"india|bengaluru|bangalore|hyderabad|pune|mumbai|delhi|new delhi|noida|gurugram|gurgaon|chennai|kolkata|"
+    r"germany|deutschland|berlin|munich|münchen|frankfurt|darmstadt|hamburg|cologne|köln|stuttgart|düsseldorf|leipzig|"
+    r"singapore|malaysia|kuala lumpur|indonesia|jakarta|philippines|manila|vietnam|ho chi minh|hanoi|thailand|bangkok|"
+    r"paris|lyon|marseille|france|spain|madrid|barcelona|valencia|italy|rome|milan|naples|"
+    r"canada|toronto|vancouver|montreal|ottawa|calgary|edmonton|waterloo|quebec|ontario|british columbia|"
+    r"australia|sydney|melbourne|brisbane|perth|adelaide|new zealand|auckland|wellington|"
+    r"netherlands|amsterdam|rotterdam|utrecht|hague|switzerland|zurich|geneva|basel|austria|vienna|"
+    r"sweden|stockholm|gothenburg|norway|oslo|denmark|copenhagen|finland|helsinki|"
+    r"poland|warsaw|krakow|wroclaw|czech|prague|brno|romania|bucharest|cluj|portugal|lisbon|porto|"
+    r"greece|athens|belgium|brussels|hungary|budapest|bulgaria|sofia|ukraine|kyiv|"
+    r"japan|tokyo|osaka|kyoto|korea|seoul|china|beijing|shanghai|shenzhen|taiwan|taipei|hong kong|"
+    r"brazil|são paulo|sao paulo|rio de janeiro|mexico|mexico city|guadalajara|monterrey|argentina|buenos aires|colombia|bogota|chile|santiago|"
+    r"israel|tel aviv|jerusalem|uae|dubai|abu dhabi|saudi arabia|riyadh|egypt|cairo|nigeria|lagos|kenya|nairobi|south africa|cape town|johannesburg|"
+    r"europe|european|emea|latam|apac|asia|middle east|oceania|africa|"
+    r"worldwide|global|anywhere\s+in\s+the\s+world|worldwide\s+remote|"
+    r"cet|cest|gmt|bst|ist|eet|eest|aest|awst|acst|nzst|westeurope|easteurope"
+    r")\b",
     re.IGNORECASE,
 )
 
@@ -17,9 +36,27 @@ DACH_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-# Regex for US location indicators
+# Regex for positive US indicators in location strings
 US_PATTERN = re.compile(
-    r"\b(united states|usa|u\.s\.a?|u\.s\.|\b[A-Z]{2}\b\s+remote|us-remote|remote,\s*us|remote\s*\(us\)|us\s+only|anywhere\s+in\s+the\s+us)\b",
+    r"(?:"
+    r"\b(united states|usa|u\.s\.a?|u\.s\.|"
+    r"us-remote|remote,\s*us|remote\s*-\s*us|remote\s+us|us\s+only|us-only|"
+    r"us\s+based|us-based|based\s+in\s+the\s+us|anywhere\s+in\s+the\s+us|"
+    r"authorized\s+to\s+work\s+in\s+the\s+us|us\s+citizens?|green\s+card|"
+    r"\b[A-Z]{2}\b\s+remote)\b|"
+    r"remote\s*\(\s*us\s*\)|\(\s*us\s*\)|\b(?:us|usa)\b"
+    r")",
+    re.IGNORECASE,
+)
+
+# Regex for positive US indicators in job descriptions (avoiding pronoun 'us')
+US_DESC_PATTERN = re.compile(
+    r"\b("
+    r"united states|usa|u\.s\.|us-remote|remote,\s*us|remote\s*\(us\)|"
+    r"us\s+only|us-based|based\s+in\s+the\s+us|anywhere\s+in\s+the\s+us|"
+    r"authorized\s+to\s+work\s+in\s+the\s+us|us\s+citizens?|green\s+card|"
+    r"eligible\s+to\s+work\s+in\s+the\s+united\s+states"
+    r")\b",
     re.IGNORECASE,
 )
 
@@ -30,6 +67,28 @@ US_STATES = {
     "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
     "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
     "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"
+}
+
+# Full US state names
+US_STATES_FULL = {
+    "alabama", "alaska", "arizona", "arkansas", "california", "colorado", "connecticut", "delaware",
+    "florida", "georgia", "hawaii", "idaho", "illinois", "indiana", "iowa", "kansas", "kentucky",
+    "louisiana", "maine", "maryland", "massachusetts", "michigan", "minnesota", "mississippi",
+    "missouri", "montana", "nebraska", "nevada", "new hampshire", "new jersey", "new mexico",
+    "new york", "north carolina", "north dakota", "ohio", "oklahoma", "oregon", "pennsylvania",
+    "rhode island", "south carolina", "south dakota", "tennessee", "texas", "utah", "vermont",
+    "virginia", "washington", "west virginia", "wisconsin", "wyoming", "district of columbia"
+}
+
+# Major US tech cities
+US_TECH_CITIES = {
+    "san francisco", "san jose", "sunnyvale", "mountain view", "palo alto", "santa clara",
+    "cupertino", "menlo park", "redwood city", "oakland", "berkeley", "bay area", "sf bay area", "silicon valley",
+    "los angeles", "san diego", "seattle", "bellevue", "redmond", "austin", "dallas", "houston",
+    "san antonio", "fort worth", "new york", "new york city", "nyc", "manhattan", "brooklyn",
+    "boston", "cambridge", "chicago", "atlanta", "denver", "boulder", "salt lake city", "portland",
+    "miami", "raleigh", "durham", "charlotte", "philadelphia", "pittsburgh", "washington dc", "dc metro",
+    "phoenix", "scottsdale", "minneapolis"
 }
 
 
@@ -67,57 +126,69 @@ def is_agency_suspect(company: str, title: str, agency_hints: List[str]) -> bool
     return False
 
 
-def is_us_listing(country: str, location: str, remote: bool, title: str = "") -> bool:
+def is_us_listing(
+    country: str,
+    location: str,
+    remote: bool,
+    title: str = "",
+    description: str = "",
+) -> bool:
     """
-    US keep rule:
-    country in {US, USA, United States, ''} AND
-    (location matches US patterns OR country==US OR (remote==true and matches US)).
-    Drop if clearly non-US (e.g. London, Germany, Munich, m/f/d, Bengaluru).
+    Strict USA-Only location gatekeeper.
+    Every listing (remote, hybrid, or on-site) must be strictly confirmed in the US.
+    Immediate drop if:
+      - Country is explicitly non-US.
+      - Title, location, or country matches non-US countries, foreign cities, timezones (CET, BST), or DACH markers.
+      - Vague remote roles (e.g. 'Worldwide' or plain 'Remote') with NO verified US residency requirement.
     """
+    # 1. German/DACH legal markers (m/f/d) in title or location
     if title and DACH_PATTERN.search(title):
+        return False
+    if location and DACH_PATTERN.search(location):
         return False
 
     norm_country = str(country or "").strip().upper()
     norm_loc = str(location or "").strip()
+    lower_loc = norm_loc.lower()
 
-    if DACH_PATTERN.search(norm_loc):
-        return False
-
-    # Immediate drop if country is clearly non-US (e.g., GB, UK, IN, DE, CA, AU, etc.)
+    # 2. Drop if country is explicitly non-US
     if norm_country and norm_country not in {"US", "USA", "UNITED STATES"}:
         return False
 
-    # Check for obvious non-US locations in the string
+    # 3. Drop if title or location mentions non-US cities, countries, or regions
     if NON_US_PATTERN.search(norm_loc):
         return False
+    if title and NON_US_PATTERN.search(title):
+        return False
 
-    # Positive US indicators
+    # 4. Check for positive US indicators
+    has_positive_us = False
+
     if norm_country in {"US", "USA", "UNITED STATES"}:
+        has_positive_us = True
+    elif US_PATTERN.search(norm_loc):
+        has_positive_us = True
+    elif re.search(r",\s*([A-Za-z]{2})\b", norm_loc) and re.search(r",\s*([A-Za-z]{2})\b", norm_loc).group(1).upper() in US_STATES:
+        has_positive_us = True
+    elif any(st in lower_loc for st in US_STATES_FULL):
+        has_positive_us = True
+    elif any(city in lower_loc for city in US_TECH_CITIES):
+        has_positive_us = True
+
+    # 5. Remote and Hybrid enforcement
+    if has_positive_us:
         return True
 
-    if US_PATTERN.search(norm_loc):
-        return True
-
-    # Check for State patterns like "Austin, TX" or "New York, NY"
-    state_match = re.search(r",\s*([A-Za-z]{2})\b", norm_loc)
-    if state_match and state_match.group(1).upper() in US_STATES:
-        return True
-
-    # Remote cases
-    if remote:
-        lower_loc = norm_loc.lower()
-        if not norm_loc or lower_loc in {"remote", "us-remote", "remote, us", "remote (us)"}:
-            return True
-        if US_PATTERN.search(norm_loc):
-            return True
-        # If location specifies worldwide or global, keep only if US is explicitly allowed
-        if "worldwide" in lower_loc or "global" in lower_loc or "anywhere" in lower_loc:
-            return bool(US_PATTERN.search(norm_loc))
-        # If it explicitly mentions "remote" and is not marked with non-US indicators
-        if "remote" in lower_loc and not NON_US_PATTERN.search(norm_loc):
+    # If role is marked remote or hybrid, only allow if description explicitly confirms US presence
+    if remote and description:
+        if DACH_PATTERN.search(description):
+            return False
+        if US_DESC_PATTERN.search(description):
             return True
 
+    # Otherwise (e.g. unverified 'Remote', 'Worldwide', or non-US location) -> Drop!
     return False
+
 
 
 def keyword_prefilter(

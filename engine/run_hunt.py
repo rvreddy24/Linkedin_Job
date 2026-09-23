@@ -54,7 +54,7 @@ def execute_hunt() -> Dict[str, Any]:
     for item in raw_listings:
         if is_posted_within_hours(item.posted_at, max_hours=max_hours):
             raw_24h_count += 1
-            if is_us_listing(item.country, item.location, item.remote, title=item.title):
+            if is_us_listing(item.country, item.location, item.remote, title=item.title, description=item.description):
                 if keyword_prefilter(item.title, item.description, keywords_include, keywords_exclude):
                     us_survivors.append(item)
 
