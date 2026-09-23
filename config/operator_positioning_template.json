@@ -1,0 +1,97 @@
+{
+  "operator_name": "Hrishith Raj Reddy Malgireddy",
+  "headline": "AI-focused Forward Deployed Engineer & GenAI/LLM Developer",
+  "contact": {
+    "location": "Columbia, MO",
+    "phone": "+1-573-639-3854",
+    "email": "hrishithrajreddy22@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/hrishith-raj-reddy-malgireddy-919750262/",
+    "portfolio": "https://portfolio-app-mm1d.vercel.app/",
+    "github": "https://github.com/hrishith30"
+  },
+  "professional_summary": "AI-focused Forward Deployed Engineer with hands-on experience designing, developing, and deploying GenAI and LLM-powered solutions directly alongside clients and startup leadership. Builds AI agent and prompt-engineering workflows, APIs, and data pipelines in Python, TypeScript, React, Node.js, Django, and PostgreSQL, backed by cloud architecture and system design on Google Cloud Platform. Experienced in translating client and stakeholder requirements into rapid prototypes and production systems, with a track record of workflow automation, enterprise integration, and clear client-facing communication across founders, researchers, and engineering teams.",
+  "one_sentence_offer": "Forward Deployed AI Engineer delivering production GenAI/LLM systems, AI agent workflows, RAG architectures, and scalable APIs directly alongside engineering and startup leadership.",
+  "what_we_sell": [
+    "Forward Deployed AI Engineering and rapid technical prototyping directly alongside product and founder teams",
+    "Production GenAI & RAG systems (LangChain, Vector Search, document processing pipelines, evaluation metrics)",
+    "Autonomous AI agent workflows and developer tooling (Claude Code, Cursor, MCP servers, prompt engineering)",
+    "Scalable backend services, REST APIs, and cloud deployments (Python, Django, FastAPI, Node.js, PostgreSQL, GCP, Docker, Terraform)"
+  ],
+  "who_we_want": [
+    "US companies and fast-moving teams hiring Forward Deployed Engineers, AI Solutions Engineers, GenAI / LLM Engineers, AI Agent Engineers, Full-Stack AI Engineers, or Founding AI Developers",
+    "Founders, CTOs, and Heads of Engineering needing hands-on engineers who build and ship production AI systems rapidly"
+  ],
+  "who_we_do_not_want": [
+    "Non-US or offshore roles",
+    "Non-technical roles (sales, customer support, recruitment, marketing, healthcare clinical)",
+    "Hardware, mechanical, or civil engineering positions"
+  ],
+  "technical_skills": {
+    "languages": ["Python", "Java", "TypeScript", "JavaScript", "C++", "C#", "SQL", "HTML", "CSS"],
+    "genai_llms_agents": ["Prompt Engineering", "RAG Systems", "AI Agents", "AI Coding-Agent Orchestration", "LangChain", "MCP Servers", "PyTorch", "OpenCV", "Vector Databases"],
+    "cloud_system_design": ["Google Cloud Platform (GCP)", "AWS", "Azure", "Docker", "Kubernetes", "Terraform", "Enterprise Integration", "System Design"],
+    "apis_pipelines_devops": ["REST APIs", "Data Pipelines", "CI/CD", "GitHub Actions", "Jenkins", "Rapid Prototyping & Deployment"],
+    "backend_databases": ["Node.js", "Express.js", "Django", "Flask", "PostgreSQL", "MongoDB", "MySQL", "Vector Databases"],
+    "frontend": ["React", "Next.js", "Astro", "Vite", "Tailwind CSS", "Angular", "Bootstrap"],
+    "ai_tools": ["Claude Code", "Cursor", "Codex", "AI Coding Agents", "Prompt Workflows"],
+    "testing_cybersecurity": ["Jest", "Unit Testing", "OWASP Top 10", "Burp Suite", "OWASP ZAP", "Nmap", "Kali Linux", "Wireshark"]
+  },
+  "education": [
+    {
+      "degree": "Master of Science in Computer Science",
+      "institution": "University of Missouri – Columbia, MO",
+      "period": "Aug 2023 – Jul 2025",
+      "coursework": "Artificial Intelligence, Machine Learning, Cloud Computing, Database Systems, Cybersecurity"
+    },
+    {
+      "degree": "Bachelor of Technology in Computer Science & Engineering",
+      "institution": "Sreyas Institute of Engineering and Technology – Hyderabad, India",
+      "period": "Aug 2019 – May 2023"
+    }
+  ],
+  "proof_points": [
+    {
+      "role": "Founding Software Developer",
+      "company": "Cure Culture",
+      "period": "Nov 2025 – Present",
+      "problem": "Startup leadership needed to translate privacy-sensitive clinical requirements into shipped GenAI functionality rapidly in an AI-enabled mental health and wellness platform.",
+      "what_you_did": "Built AI agent and prompt-engineering workflows using Claude Code, Cursor, and AI coding agents. Designed and implemented backend services, REST APIs, and data pipelines with Python, Django, PostgreSQL, and GCP with Terraform, Docker, and CI/CD.",
+      "outcome": "Shipped production-ready, privacy-sensitive AI features directly alongside founders with enterprise reliability and modern TypeScript/React frontend."
+    },
+    {
+      "role": "AI Project Creator",
+      "project": "AI Knowledge Assistant Using Retrieval-Augmented Generation (RAG)",
+      "problem": "Users needed accurate, hallucination-free question answering across large proprietary documents with measurable response quality.",
+      "what_you_did": "Designed and rapidly prototyped an AI-powered knowledge assistant using retrieval-based LLM workflows, LangChain, vector search, document-processing pipelines, and structured AI response parsing.",
+      "outcome": "Built reusable API and data-pipeline components in Python/PostgreSQL with evaluation workflows measuring AI response quality and reliability."
+    },
+    {
+      "role": "Research Assistant & Teaching Assistant",
+      "company": "University of Missouri – Columbia",
+      "period": "Aug 2023 – Jul 2025",
+      "problem": "ML research initiatives required custom data pipelines and model training optimization, and 60+ engineering students needed hands-on systems guidance.",
+      "what_you_did": "Built ML pipelines using PyTorch for ferrite core power loss prediction; developed Python data-processing and workflow-automation scripts; mentored 60+ students per semester in cybersecurity and programming labs.",
+      "outcome": "Improved prediction accuracy by 15% over baseline, reduced model training time by 20%, and guided 60+ students in software engineering concepts."
+    },
+    {
+      "role": "Software Developer Intern",
+      "company": "Remote Raise Digital",
+      "period": "Nov 2022 – Mar 2023",
+      "problem": "1,500+ monthly users required scalable web applications with faster API responses and automated release cycles.",
+      "what_you_did": "Developed scalable backend APIs and data pipelines using Node.js, Express, and MongoDB; built responsive React interfaces; automated Docker and Jenkins CI/CD deployment pipelines.",
+      "outcome": "Reduced average API response time by 25% and cut deployment time from hours to under 30 minutes."
+    },
+    {
+      "role": "Cybersecurity Analyst & Ethical Hacking Intern",
+      "company": "Supraja Technologies",
+      "period": "Jan 2022 – Nov 2022",
+      "problem": "Web applications required vulnerability assessment and system-integration risk assessment against OWASP security threats.",
+      "what_you_did": "Developed Python automation scripts for vulnerability assessment and security testing; performed penetration testing; collaborated with developers to implement OWASP Top 10 improvements.",
+      "outcome": "Remediated 10+ backend vulnerabilities and reduced manual security assessment time by 50%."
+    }
+  ],
+  "draft_signature": "Best regards,\nHrishith Raj Reddy Malgireddy\nAI Forward Deployed Engineer\nPhone: +1-573-639-3854 | Email: hrishithrajreddy22@gmail.com\nLinkedIn: https://www.linkedin.com/in/hrishith-raj-reddy-malgireddy-919750262/\nPortfolio: https://portfolio-app-mm1d.vercel.app/\nGitHub: https://github.com/hrishith30",
+  "profile_url": "https://www.linkedin.com/in/hrishith-raj-reddy-malgireddy-919750262/",
+  "portfolio_url": "https://portfolio-app-mm1d.vercel.app/",
+  "github_url": "https://github.com/hrishith30"
+}

@@ -1,0 +1,29 @@
+# Environment variables & secrets
+.env
+*.env
+!.env.example
+
+# Databases & local ledger state
+*.db
+*.db.backup
+*.sqlite
+*.sqlite3
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.pytest_cache/
+
+# Scratch & temporary test scripts
+scratch_linkedin.py
+scratch/
+
+# Local CSV outputs
+sheets/Ledger.csv
+sheets/Touches.csv
+
+# OS specific files
+.DS_Store
+Thumbs.db

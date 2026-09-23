@@ -1,0 +1,1272 @@
+{
+  "name": "Auto Bot LinkedIn Job (Discord Edition)",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Daily Hunt",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        100,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 13 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "Telegram Command",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        100,
+        500
+      ],
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ]
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_cred",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "Parse Telegram Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        500
+      ],
+      "parameters": {
+        "jsCode": "const j = $json;\nconst msg = j.message || {};\nconst cb = j.callback_query;\nif (cb && cb.data) {\n  const [action, listing_id] = String(cb.data).split('::');\n  return [{ json: { route: action, listing_id,\n    chatId: cb.message.chat.id, callback_id: cb.id } }];\n}\nconst text = (msg.text || '').trim();\nconst route = text.startsWith('/status') ? 'status'\n  : text.startsWith('/help') ? 'help' : 'hunt';\nreturn [{ json: { route, chatId: msg.chat && msg.chat.id } }];"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Route Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        540,
+        500
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "value1": "={{ $json.route }}",
+              "value2": "hunt",
+              "operation": "equals"
+            },
+            {
+              "value1": "={{ $json.route }}",
+              "value2": "status",
+              "operation": "equals"
+            },
+            {
+              "value1": "={{ $json.route }}",
+              "value2": "help",
+              "operation": "equals"
+            },
+            {
+              "value1": "={{ $json.route }}",
+              "value2": "draft",
+              "operation": "equals"
+            },
+            {
+              "value1": "={{ $json.route }}",
+              "value2": "open",
+              "operation": "equals"
+            },
+            {
+              "value1": "={{ $json.route }}",
+              "value2": "contact",
+              "operation": "equals"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5",
+      "name": "Telegram Help",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        650
+      ],
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "Auto Bot LinkedIn Job\n/hunt \u2014 search and score US listings now\n/status \u2014 today's keep / hot / credits\n/help \u2014 this message\n\nOn each card:\nDraft outreach \u2014 write a note (blocked during company cooldown)\nOpen posting \u2014 open the job URL\nFind contact \u2014 LinkedIn search for the approach role\n\nNothing is sent to a company unless you paste the draft yourself."
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_cred",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "6",
+      "name": "Hunt Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        780,
+        300
+      ],
+      "parameters": {
+        "options": {},
+        "fields": {
+          "values": [
+            {
+              "name": "operator_name",
+              "stringValue": "Operator"
+            },
+            {
+              "name": "cooldown_days",
+              "numberValue": 21
+            },
+            {
+              "name": "keep_score_min",
+              "numberValue": 55
+            },
+            {
+              "name": "hot_score_min",
+              "numberValue": 80
+            },
+            {
+              "name": "posted_within_days",
+              "numberValue": 1
+            },
+            {
+              "name": "posted_within_hours",
+              "numberValue": 24
+            },
+            {
+              "name": "jobspipe_limit",
+              "numberValue": 25
+            },
+            {
+              "name": "description_max_chars",
+              "numberValue": 6000
+            },
+            {
+              "name": "keywords_include",
+              "stringValue": "Forward Deployed, Forward Deployed Engineer, Forward Deployed AI, AI Solutions Engineer, GenAI Solutions Engineer, GenAI Engineer, Generative AI Engineer, LLM Engineer, AI Agent Engineer, AI Systems Engineer, AI Application Developer, Full Stack AI Engineer, Applied AI Engineer, RAG Engineer, Prompt Engineer, Machine Learning Engineer, AI Software Engineer, Founding AI Engineer, Founding Software Developer, AI Engineer, Python AI Developer, AI Developer"
+            },
+            {
+              "name": "keywords_exclude_title",
+              "stringValue": "Hardware Engineer, Mechanical Engineer, Civil Engineer, Nurse, Therapist, Psychotherapist, Dental, Accountant, Payroll, Customer Service, Customer Support, Sales Representative, Account Executive, Retail, Legal Counsel, Recruiter, Talent Partner, Project Scheduler, Billing Specialist"
+            },
+            {
+              "name": "agency_name_hints",
+              "stringValue": "recruitment, recruiting, staffing, search firm, talent partners"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7",
+      "name": "Build JobsPipe Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        180
+      ],
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    job_title_or: [\"Forward Deployed Engineer\", \"AI Solutions Engineer\", \"GenAI Engineer\"],\n    job_country_code_or: [\"US\"],\n    posted_at_max_age_days: 1,\n    limit: 25,\n    include_total_results: true\n  }\n}];"
+      }
+    },
+    {
+      "id": "8",
+      "name": "JobsPipe Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.jobspipe.dev/v1/jobs/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "continueOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jobspipe_cred",
+          "name": "JobsPipe Header Auth"
+        }
+      }
+    },
+    {
+      "id": "9",
+      "name": "Remotive Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://remotive.com/api/remote-jobs",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "10",
+      "name": "RemoteOK Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        420
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://remoteok.com/api",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "11",
+      "name": "Arbeitnow Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        540
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.arbeitnow.com/api/job-board-api",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "12",
+      "name": "Jobicy Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        660
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://jobicy.com/api/v2/remote-jobs",
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "13",
+      "name": "Merge All Sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function norm(s) {\n  return String(s || '').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,' ').trim();\n}\nfunction companyKey(s) {\n  return norm(s).replace(/\\b(pvt|private|ltd|limited|inc|llc|llp|gmbh|plc)\\b/g,'').trim();\n}\n\nconst out = [];\n\n// 1. JobsPipe\ntry {\n  const jp = $('JobsPipe Search').first().json || {};\n  const data = jp.data || [];\n  for (const it of data) {\n    out.push({\n      listing_id: 'jobspipe:' + (it.id || ''),\n      fingerprint: companyKey(it.company) + '|' + norm(it.job_title),\n      source: 'jobspipe',\n      title: it.job_title || '',\n      company: it.company || '',\n      location: it.location || '',\n      country: it.country_code || 'US',\n      remote: !!it.remote,\n      employment_type: it.seniority || '',\n      posted_at: it.date_posted || '',\n      url: it.source_url || '',\n      description: it.description || ''\n    });\n  }\n} catch (e) {}\n\n// 2. Remotive\ntry {\n  const rem = $('Remotive Feed').first().json || {};\n  for (const it of (rem.jobs || [])) {\n    out.push({\n      listing_id: 'remotive:' + (it.id || ''),\n      fingerprint: companyKey(it.company_name) + '|' + norm(it.title),\n      source: 'remotive',\n      title: it.title || '',\n      company: it.company_name || '',\n      location: it.candidate_required_location || '',\n      country: '',\n      remote: true,\n      employment_type: it.job_type || '',\n      posted_at: it.publication_date || '',\n      url: it.url || '',\n      description: it.description || ''\n    });\n  }\n} catch (e) {}\n\n// 3. RemoteOK\ntry {\n  const rok = $('RemoteOK Feed').all() || [];\n  for (const row of rok) {\n    const it = row.json;\n    if (it && it.id && it.position) {\n      out.push({\n        listing_id: 'remoteok:' + it.id,\n        fingerprint: companyKey(it.company) + '|' + norm(it.position),\n        source: 'remoteok',\n        title: it.position || '',\n        company: it.company || '',\n        location: it.location || '',\n        country: '',\n        remote: true,\n        employment_type: '',\n        posted_at: it.date || '',\n        url: it.url || '',\n        description: it.description || ''\n      });\n    }\n  }\n} catch (e) {}\n\n// 4. Arbeitnow\ntry {\n  const arb = $('Arbeitnow Feed').first().json || {};\n  for (const it of (arb.data || [])) {\n    out.push({\n      listing_id: 'arbeitnow:' + (it.slug || it.url || ''),\n      fingerprint: companyKey(it.company_name) + '|' + norm(it.title),\n      source: 'arbeitnow',\n      title: it.title || '',\n      company: it.company_name || '',\n      location: it.location || '',\n      country: '',\n      remote: !!it.remote,\n      employment_type: '',\n      posted_at: it.created_at || '',\n      url: it.url || '',\n      description: it.description || ''\n    });\n  }\n} catch (e) {}\n\n// 5. Jobicy\ntry {\n  const jobicy = $('Jobicy Feed').first().json || {};\n  for (const it of (jobicy.jobs || [])) {\n    out.push({\n      listing_id: 'jobicy:' + (it.id || ''),\n      fingerprint: companyKey(it.companyName) + '|' + norm(it.jobTitle),\n      source: 'jobicy',\n      title: it.jobTitle || '',\n      company: it.companyName || '',\n      location: it.jobGeo || '',\n      country: '',\n      remote: true,\n      employment_type: it.jobType || '',\n      posted_at: it.pubDate || '',\n      url: it.url || '',\n      description: it.jobDescription || ''\n    });\n  }\n} catch (e) {}\n\nreturn out.map(j => ({ json: j }));"
+      }
+    },
+    {
+      "id": "14",
+      "name": "Normalize Listings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Hunt Config').first().json;\nconst hints = (cfg.agency_name_hints || '').toLowerCase().split(',').map(s => s.trim());\n\nreturn $input.all().map(item => {\n  const j = item.json;\n  const combined = (j.company + ' ' + j.title).toLowerCase();\n  const agency_suspect = hints.some(h => h && combined.includes(h));\n  return { json: { ...j, agency_suspect } };\n});"
+      }
+    },
+    {
+      "id": "15",
+      "name": "Drop Non-US",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const NON_US = /\\b(london|bengaluru|bangalore|uk|united kingdom|india|germany|singapore|berlin|paris|france|canada|toronto|vancouver|australia|sydney|melbourne|netherlands|amsterdam|emea|latam|apac|brazil|mexico|poland|spain|madrid|barcelona|ireland|dublin|japan|tokyo)\\b/i;\nconst US_PAT = /\\b(united states|usa|u\\.s\\.a?|u\\.s\\.|\\b[A-Z]{2}\\b\\s+remote|us-remote|remote,\\s*us|remote\\s*\\(us\\)|us\\s+only|anywhere\\s+in\\s+the\\s+us)\\b/i;\n\nreturn $input.all().filter(item => {\n  const j = item.json;\n  const c = String(j.country || '').trim().toUpperCase();\n  const loc = String(j.location || '').trim();\n\n  if (c && c !== 'US' && c !== 'USA' && c !== 'UNITED STATES') return false;\n  if (NON_US.test(loc)) return false;\n  if (c === 'US' || c === 'USA' || c === 'UNITED STATES') return true;\n  if (US_PAT.test(loc)) return true;\n  if (j.remote) {\n    const locL = loc.toLowerCase();\n    if (!loc || locL.includes('remote') || !locL.includes('worldwide')) {\n      if (locL.includes('worldwide') || locL.includes('global') || locL.includes('anywhere')) {\n        return US_PAT.test(loc);\n      }\n      return true;\n    }\n  }\n  return false;\n});"
+      }
+    },
+    {
+      "id": "16",
+      "name": "Keyword Prefilter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const cfg = $('Hunt Config').first().json;\nconst includes = (cfg.keywords_include || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);\nconst excludes = (cfg.keywords_exclude_title || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);\n\nreturn $input.all().filter(item => {\n  const j = item.json;\n  const title = (j.title || '').toLowerCase().trim();\n  const desc = (j.description || '').toLowerCase();\n  if (!title) return false;\n\n  const hasInc = includes.some(kw => title.includes(kw) || desc.includes(kw));\n  if (!hasInc) return false;\n\n  const hasExc = excludes.some(ex => title.includes(ex));\n  if (hasExc) {\n    const titleHasInc = includes.some(kw => title.includes(kw));\n    if (!titleHasInc) return false;\n  }\n  return true;\n});"
+      }
+    },
+    {
+      "id": "17",
+      "name": "Drop Already Seen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2280,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Read Ledger listing_ids and fingerprints to prevent duplicate scoring\nconst seen_ids = new Set();\nconst seen_fps = new Set();\n\ntry {\n  const ledgerRows = $('Read Ledger Sheet').all() || [];\n  for (const r of ledgerRows) {\n    if (r.json.listing_id) seen_ids.add(r.json.listing_id);\n    if (r.json.fingerprint) seen_fps.add(r.json.fingerprint);\n  }\n} catch (e) {}\n\nconst unique = [];\nfor (const item of $input.all()) {\n  const j = item.json;\n  if (!seen_ids.has(j.listing_id) && !seen_fps.has(j.fingerprint)) {\n    seen_ids.add(j.listing_id);\n    seen_fps.add(j.fingerprint);\n    unique.push(item);\n  }\n}\nreturn unique;"
+      }
+    },
+    {
+      "id": "18",
+      "name": "New Item?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $input.all().length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "19",
+      "name": "Discord Nothing New Notice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2700,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"Auto Bot LinkedIn Job\",\n  \"content\": \"\u2705 **Quiet success**: No new US listings found today. All matching listings have already been reviewed and logged.\"\n}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "20",
+      "name": "Scoring Batch",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2700,
+        240
+      ],
+      "parameters": {
+        "batchSize": 5
+      }
+    },
+    {
+      "id": "21",
+      "name": "Score Listing",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        2920,
+        240
+      ],
+      "parameters": {
+        "prompt": "=LISTING\ntitle: {{ $json.title }}\ncompany: {{ $json.company }}\nlocation: {{ $json.location }} | {{ $json.country }} | remote={{ $json.remote }}\nsource: {{ $json.source }}  url: {{ $json.url }}  posted_at: {{ $json.posted_at }}\nagency_suspect: {{ $json.agency_suspect }}\ndescription:\n{{ $json.description ? $json.description.slice(0, 5000) : '' }}"
+      }
+    },
+    {
+      "id": "22",
+      "name": "Google Gemini Chat Model (Scoring)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2920,
+        420
+      ],
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash"
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gemini_cred",
+          "name": "Google Gemini account"
+        }
+      }
+    },
+    {
+      "id": "23",
+      "name": "Listing Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.1,
+      "position": [
+        3100,
+        420
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\": \"object\", \"properties\": {\"type\": {\"type\": \"string\", \"enum\": [\"DIRECT_GIG\", \"BUY_SIGNAL\", \"IGNORE\"]}, \"score\": {\"type\": \"integer\"}, \"band\": {\"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"]}, \"one_line_fit\": {\"type\": \"string\"}, \"angle\": {\"type\": \"string\"}, \"approach_role\": {\"type\": \"string\"}, \"asks_for\": {\"type\": \"string\"}, \"concern\": {\"type\": \"string\"}, \"agency_post\": {\"type\": \"boolean\"}, \"keep\": {\"type\": \"boolean\"}}, \"required\": [\"type\", \"score\", \"band\", \"one_line_fit\", \"angle\", \"approach_role\", \"asks_for\", \"concern\", \"agency_post\", \"keep\"]}"
+      }
+    },
+    {
+      "id": "24",
+      "name": "Attach Scores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3280,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const parsed = $json.output || {};\nconst listing = $('Scoring Batch').item.json;\nconst score = Number(parsed.score || 0);\nconst type = parsed.type || 'IGNORE';\nconst keep = (type !== 'IGNORE' && score >= 55);\nconst band = score >= 80 ? 'high' : (score >= 55 ? 'medium' : 'low');\n\nreturn [{\n  json: {\n    ...listing,\n    ...parsed,\n    score,\n    type,\n    keep,\n    band,\n    run_at: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "25",
+      "name": "Log To Ledger",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        3480,
+        240
+      ],
+      "parameters": {
+        "operation": "append",
+        "sheetName": "Ledger",
+        "documentId": {
+          "__rl": true,
+          "value": "GOOGLE_SPREADSHEET_ID",
+          "mode": "id"
+        }
+      },
+      "continueOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2": {
+          "id": "sheets_cred",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "26",
+      "name": "Keep Relevant",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3680,
+        240
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.keep }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "27",
+      "name": "Append To Pipeline Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        3880,
+        180
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetName": "Pipeline",
+        "documentId": {
+          "__rl": true,
+          "value": "GOOGLE_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "columnToMatchOn": "listing_id"
+      },
+      "continueOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2": {
+          "id": "sheets_cred",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "28",
+      "name": "Hot Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.score }}",
+              "operation": "largerEqual",
+              "value2": 80
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "29",
+      "name": "Discord Hot Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4280,
+        120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"Auto Bot LinkedIn Job\",\n  \"embeds\": [\n    {\n      \"title\": \"\ud83c\udfaf \" + $json.title + \" @ \" + $json.company,\n      \"url\": $json.url,\n      \"description\": \"*\" + $json.one_line_fit + \"*\\n\\n\ud83d\udd17 [Open Posting](\" + $json.url + \") | \ud83d\udd0e [LinkedIn Contact Search](https://www.linkedin.com/search/results/people/?keywords=\" + encodeURIComponent(($json.approach_role || \"VP of Engineering / Head of AI\") + \" \" + $json.company) + \")\",\n      \"color\": ($json.type === \"BUY_SIGNAL\" ? 15844367 : 3066993),\n      \"fields\": [\n        {\"name\": \"Signal & Score\", \"value\": \"**\" + $json.type + \"** \u2014 `\" + $json.score + \"/100` (\" + $json.band + \")\", \"inline\": true},\n        {\"name\": \"Location & Source\", \"value\": ($json.location || \"US Remote\") + \" \u2022 \" + $json.source, \"inline\": true},\n        {\"name\": \"Target Approach Role\", \"value\": \"`\" + ($json.approach_role || \"VP of Engineering / Head of AI\") + \"`\", \"inline\": true},\n        {\"name\": \"Strategic Angle\", \"value\": $json.angle || \"N/A\", \"inline\": false},\n        {\"name\": \"Asks For\", \"value\": $json.asks_for || \"N/A\", \"inline\": true},\n        {\"name\": \"Concern\", \"value\": $json.concern || \"N/A\", \"inline\": true}\n      ],\n      \"footer\": {\"text\": \"Auto Bot LinkedIn Job \u2022 ID: \" + $json.listing_id}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "30",
+      "name": "Build Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4480,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const now = new Date().toISOString();\nconst allScored = $('Attach Scores').all() || [];\nconst kept = allScored.filter(i => i.json.keep).length;\nconst hot = allScored.filter(i => i.json.score >= 80).length;\nconst total = allScored.length;\n\nreturn [{\n  json: {\n    digest_text: `Auto Bot digest \u2014 ${now}\\nScored: ${total}   Kept: ${kept}   Hot: ${hot}`\n  }\n}];"
+      }
+    },
+    {
+      "id": "31",
+      "name": "Discord Run Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4680,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"username\": \"Auto Bot LinkedIn Job\",\n  \"embeds\": [\n    {\n      \"title\": \"\ud83d\udcca Auto Bot Hunt Digest\",\n      \"description\": \"```\\n\" + $json.digest_text + \"\\n```\",\n      \"color\": 3447003,\n      \"footer\": {\"text\": \"Auto Bot LinkedIn Job \u2022 US Only\"}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "32",
+      "name": "Acknowledge Button",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        800
+      ],
+      "parameters": {
+        "operation": "answerCallbackQuery",
+        "callbackQueryId": "={{ $json.callback_id }}"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_cred",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "33",
+      "name": "Lookup Listing",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        1000,
+        800
+      ],
+      "parameters": {
+        "operation": "lookup",
+        "sheetName": "Pipeline",
+        "documentId": {
+          "__rl": true,
+          "value": "GOOGLE_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "lookupColumn": "listing_id",
+        "lookupValue": "={{ $('Parse Telegram Command').first().json.listing_id }}"
+      },
+      "credentials": {
+        "googleSheetsOAuth2": {
+          "id": "sheets_cred",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "34",
+      "name": "Evaluate Cooldown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        800
+      ],
+      "parameters": {
+        "jsCode": "const days = Number($('Hunt Config').first().json.cooldown_days || 21);\nconst last = $json.last_touch_at ? new Date($json.last_touch_at) : null;\nconst blocked = last && (Date.now() - last.getTime()) / 86400000 < days;\nreturn [{ json: { ...$json, cooldown: blocked ? 'blocked' : 'allowed' } }];"
+      }
+    },
+    {
+      "id": "35",
+      "name": "Cooldown Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        800
+      ],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.cooldown }}",
+              "operation": "equals",
+              "value2": "allowed"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "36",
+      "name": "Telegram Cooldown Notice",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1660,
+        920
+      ],
+      "parameters": {
+        "chatId": "={{ $('Parse Telegram Command').first().json.chatId }}",
+        "text": "=\u23f8\ufe0f Cooldown Notice: A draft was created for {{ $json.company }} within the last 21 days. Blocked."
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_cred",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "37",
+      "name": "Draft Outreach",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1660,
+        780
+      ],
+      "parameters": {
+        "prompt": "=Write a short note the operator can paste into LinkedIn or email.\nDo not send anything. Do not invent meetings, metrics, or case studies.\nUse at most ONE proof point from the list, or none if none fit.\nDo not dump the resume.\nBUY_SIGNAL: write to {{ $json.approach_role }}. Treat the hire as proof of intent.\nPosition hands-on experience designing, developing, and deploying production GenAI systems, autonomous agent workflows, and RAG architectures in Python, TypeScript, and GCP.\nDIRECT_GIG: write as a specialist proposing to deliver rapid AI prototyping and API deployment.\n80-130 words. Plain text.\n\nCARD:\n{{ $json.type }} {{ $json.score }} {{ $json.title }} @ {{ $json.company }}\nFit: {{ $json.one_line_fit }}\nAngle: {{ $json.angle }}\nConcern: {{ $json.concern }}"
+      }
+    },
+    {
+      "id": "38",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        980
+      ],
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash"
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gemini_cred",
+          "name": "Google Gemini account"
+        }
+      }
+    },
+    {
+      "id": "39",
+      "name": "Send Draft",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1880,
+        780
+      ],
+      "parameters": {
+        "chatId": "={{ $('Parse Telegram Command').first().json.chatId }}",
+        "text": "=\ud83d\udcdd Outreach Draft for {{ $('Lookup Listing').first().json.company }}:\\n\\n{{ $json.response }}"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_cred",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "40",
+      "name": "Find Contact",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        1100
+      ],
+      "parameters": {
+        "jsCode": "const q = encodeURIComponent(($json.approach_role || 'VP of Engineering / Head of AI') + ' ' + ($json.company || ''));\nreturn [{ json: { ...$json, contact_url: 'https://www.linkedin.com/search/results/people/?keywords=' + q } }];"
+      }
+    },
+    {
+      "id": "41",
+      "name": "Telegram Contact Result",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1220,
+        1100
+      ],
+      "parameters": {
+        "chatId": "={{ $('Parse Telegram Command').first().json.chatId }}",
+        "text": "=\ud83d\udd0e LinkedIn People Search for {{ $json.company }}:\\n<{{ $json.contact_url }}>"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_cred",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Hunt": {
+      "main": [
+        [
+          {
+            "node": "Hunt Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Command": {
+      "main": [
+        [
+          {
+            "node": "Parse Telegram Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Telegram Command": {
+      "main": [
+        [
+          {
+            "node": "Route Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Command": {
+      "main": [
+        [
+          {
+            "node": "Hunt Config",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Telegram Help",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acknowledge Button",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acknowledge Button",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acknowledge Button",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunt Config": {
+      "main": [
+        [
+          {
+            "node": "Build JobsPipe Payload",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Remotive Feed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RemoteOK Feed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Arbeitnow Feed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Jobicy Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build JobsPipe Payload": {
+      "main": [
+        [
+          {
+            "node": "JobsPipe Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JobsPipe Search": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remotive Feed": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RemoteOK Feed": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Arbeitnow Feed": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jobicy Feed": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Sources": {
+      "main": [
+        [
+          {
+            "node": "Normalize Listings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Listings": {
+      "main": [
+        [
+          {
+            "node": "Drop Non-US",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drop Non-US": {
+      "main": [
+        [
+          {
+            "node": "Keyword Prefilter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Prefilter": {
+      "main": [
+        [
+          {
+            "node": "Drop Already Seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drop Already Seen": {
+      "main": [
+        [
+          {
+            "node": "New Item?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Item?": {
+      "main": [
+        [
+          {
+            "node": "Scoring Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord Nothing New Notice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring Batch": {
+      "main": [
+        [
+          {
+            "node": "Score Listing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model (Scoring)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Score Listing",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listing Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Score Listing",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Listing": {
+      "main": [
+        [
+          {
+            "node": "Attach Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Scores": {
+      "main": [
+        [
+          {
+            "node": "Log To Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log To Ledger": {
+      "main": [
+        [
+          {
+            "node": "Keep Relevant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep Relevant": {
+      "main": [
+        [
+          {
+            "node": "Append To Pipeline Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append To Pipeline Sheet": {
+      "main": [
+        [
+          {
+            "node": "Hot Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Only": {
+      "main": [
+        [
+          {
+            "node": "Discord Hot Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Hot Alert": {
+      "main": [
+        [
+          {
+            "node": "Build Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Digest": {
+      "main": [
+        [
+          {
+            "node": "Discord Run Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acknowledge Button": {
+      "main": [
+        [
+          {
+            "node": "Lookup Listing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Listing": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Cooldown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Cooldown": {
+      "main": [
+        [
+          {
+            "node": "Cooldown Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cooldown Gate": {
+      "main": [
+        [
+          {
+            "node": "Draft Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Cooldown Notice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Draft Outreach",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft Outreach": {
+      "main": [
+        [
+          {
+            "node": "Send Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Contact": {
+      "main": [
+        [
+          {
+            "node": "Telegram Contact Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
