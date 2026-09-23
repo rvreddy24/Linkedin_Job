@@ -47,7 +47,7 @@ TECHNICAL STACK:
 TARGET ROLES: {who_want}
 EXCLUDED: {who_not}
 SIGNAL LOGIC:
-  BUY_SIGNAL: Direct match roles in AI & software engineering: Forward Deployed Engineer, AI Solutions Engineer, GenAI / LLM Engineer, AI Agent Engineer, Full Stack AI, Applied Machine Learning, RAG Engineer, Founding AI Engineer.
+  BUY_SIGNAL: Direct match roles in AI & software engineering: AI Intern, Software Engineer Intern, Machine Learning Intern, Junior / Entry-Level AI Engineer (0-1 years), Forward Deployed Engineer, AI Solutions Engineer, GenAI / LLM Engineer, AI Agent Engineer, Full Stack AI, Applied Machine Learning, RAG Engineer, Founding AI Engineer.
   DIRECT_GIG: Contract, freelance, or specialist engineering engagements building AI prototypes, agent workflows, or RAG architectures.
   IGNORE: Non-US roles, completely non-technical roles (sales, clinical healthcare, recruiting, HR, legal, accounting), or hardware/civil engineering.
 AGENCY RULE: if employer is a recruiter and client is hidden, agency_post=true and prefix POSTED VIA AGENCY."""
@@ -58,13 +58,13 @@ Use only the positioning pack and the listing. Do not invent employers, metrics,
 
 OPERATOR EXPERIENCE LEVEL & TARGETS:
 - Education: Master of Science in Computer Science (Aug 2023 - Jul 2025), B.Tech in CSE (2019-2023).
-- Professional Experience: 1–3 years (Founding Software Developer @ Cure Culture shipping production AI agents, Research Assistant / TA @ Mizzou with PyTorch, MERN intern).
-- TARGET SENIORITY: Early Career, Associate, Mid-Level, Forward Deployed Engineer, AI Solutions Engineer, GenAI / LLM Engineer, AI Agent Engineer, Founding AI Engineer.
+- Professional Experience: Internships, 0–1 years (New Grad / Entry-Level / Beginner), and 1–3 years (Founding Software Developer @ Cure Culture shipping production AI agents, Research Assistant / TA @ Mizzou with PyTorch, MERN intern).
+- TARGET SENIORITY: Intern, Internship, Entry-Level / New Grad (0-1 years), Junior, Associate, Mid-Level (1-3 years), Forward Deployed Engineer, AI Solutions Engineer, GenAI / LLM Engineer, AI Agent Engineer, Founding AI Developer.
 - EXCLUDE SENIORITY: Do NOT target high-seniority executive or staff roles (Staff Engineer, Principal Engineer, Director, VP, CTO, or roles requiring 8+ years of experience). These must be scored IGNORE (< 45).
 - LOCATION: MUST BE USA ONLY (or US-Remote). Any role located in Europe, UK, Germany, DACH (m/f/d), or requiring non-US residency must be scored IGNORE (0-10).
 
 CLASSIFICATION:
-BUY_SIGNAL (score 75-100) = Direct target roles matching 1-4 years experience: Forward Deployed Engineer, AI Solutions Engineer, GenAI Engineer, LLM Engineer, AI Agent Engineer, Full Stack AI, Applied Machine Learning, RAG Developer, Founding AI Engineer.
+BUY_SIGNAL (score 75-100) = Direct target roles matching Internships, 0-1 years (New Grad / Junior / Beginner), or 1-3 years: AI Intern, Software Engineer Intern, Machine Learning Intern, Junior AI Engineer, Entry-Level AI Developer, Forward Deployed Engineer, AI Solutions Engineer, GenAI Engineer, LLM Engineer, AI Agent Engineer, Full Stack AI, Applied Machine Learning, RAG Developer, Founding AI Developer.
 DIRECT_GIG (score 70-85) = Contract, freelance, or specialist engagement delivering AI prototypes, agent workflows, or RAG architectures.
 IGNORE (score 0-45) = Non-US roles, over-senior executive/staff roles (Staff/Principal/Director/VP/CTO), completely non-technical roles, or hardware/civil engineering.
 

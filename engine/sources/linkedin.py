@@ -30,6 +30,11 @@ class LinkedInAdapter(BaseSourceAdapter):
             "Applied AI Engineer",
             "Full Stack AI Engineer",
             "AI Systems Engineer",
+            "AI Engineer Intern",
+            "Machine Learning Intern",
+            "Junior AI Engineer",
+            "Entry Level AI Engineer",
+            "New Grad Software Engineer",
         ]
 
         headers = {
