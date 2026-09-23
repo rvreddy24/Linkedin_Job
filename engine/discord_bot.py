@@ -164,7 +164,7 @@ async def slash_hunt(interaction: discord.Interaction):
         )
         await interaction.followup.send(embed=report_embed)
 
-        for card in results.get("hot_cards", []):
+        for card in results.get("hot_cards", [])[:10]:
             listing_id = card["listing_id"]
             item_data = storage.lookup_pipeline(listing_id)
             if not item_data:
@@ -208,7 +208,7 @@ async def slash_hot(interaction: discord.Interaction):
     cursor.execute("""
         SELECT listing_id, company, title, location, country, source, url, type, score, band,
                one_line_fit, angle, approach_role, asks_for, concern, agency_post
-        FROM pipeline WHERE score >= 80 ORDER BY score DESC LIMIT 5
+        FROM pipeline WHERE score >= 80 ORDER BY score DESC LIMIT 10
     """)
     rows = cursor.fetchall()
 

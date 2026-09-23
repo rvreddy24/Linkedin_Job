@@ -21,10 +21,15 @@ class LinkedInAdapter(BaseSourceAdapter):
         """
         search_queries = [
             "Forward Deployed Engineer",
+            "Forward Deployed AI",
             "AI Solutions Engineer",
             "GenAI Engineer",
+            "GenAI Solutions Engineer",
             "LLM Engineer",
             "AI Agent Engineer",
+            "Applied AI Engineer",
+            "Full Stack AI Engineer",
+            "AI Systems Engineer",
         ]
 
         headers = {

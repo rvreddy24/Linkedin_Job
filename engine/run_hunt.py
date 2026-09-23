@@ -118,6 +118,7 @@ def execute_hunt() -> Dict[str, Any]:
                     })
 
         storage.upsert_pipeline(kept_items)
+        hot_cards = hot_cards[:10]
 
     kept_count = len(kept_items)
     hot_count = len(hot_cards)
