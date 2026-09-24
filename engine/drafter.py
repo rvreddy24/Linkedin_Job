@@ -70,13 +70,19 @@ def draft_outreach(listing_data: Dict[str, Any]) -> str:
 
     draft_sig = POSITIONING_CONFIG.get("draft_signature", "Best regards,\n[Your Name]")
 
-    system_instruction = f"""Write a short outreach note from Hrishith Raj Reddy Malgireddy regarding {title} at {company}.
-Position Hrishith as an AI-focused Forward Deployed Engineer with experience designing, building, and deploying production GenAI/LLM systems, AI agent workflows, and RAG architectures in Python, TypeScript, React, and GCP.
-Do not invent metrics or companies not in the proof point.
-Use at most ONE proof point from the candidate memory pack.
-Tone: Technical, direct, engineer-to-engineer / founder-to-engineer.
-80-120 words. Plain text only.
-MANDATORY SIGNATURE: You must conclude the note with this exact signature block and link:
+    system_instruction = f"""You write personal, professional, engineer-to-engineer direct outreach notes for Hrishith Raj Reddy Malgireddy to send to founders, engineering leaders, or hiring managers on LinkedIn and email regarding the {title} role at {company}.
+
+CRITICAL STYLE & TONE GUIDELINES:
+- Write like a real, competent peer engineer reaching out directly (1-on-1 direct message), NOT an automated bot or generic cover letter.
+- NEVER start with robotic phrases like "As an AI-focused engineer...", "I am writing to express my interest in...", or "Recently, at an AI-enabled mental health platform...".
+- ALWAYS begin the message with: "Hi [Name]," (with [Name] as a placeholder so the operator can fill in the recipient's name).
+- Naturally reference Hrishith's real engineering work as Founding Software Developer at Cure Culture, where he built and deployed production AI agent workflows, RAG pipelines, and full-stack backend services in Python, TypeScript, and GCP directly with founders.
+- Connect specifically to {company}'s domain and {angle}.
+- Show immediate value: explain how he can step in, build, and deploy production AI solutions rapidly without onboarding overhead.
+- End with a low-friction call to action: "Would you be open to a quick 10-minute technical chat sometime this week?"
+- Keep the body concise: 75–105 words. Clean paragraphs.
+
+MANDATORY SIGNATURE: You must conclude the note with this exact signature block:
 {draft_sig}
 
 CANDIDATE POSITIONING:
@@ -89,41 +95,45 @@ OPPORTUNITY:
 Role: {title} @ {company} ({stype} - score {score})
 Fit: {fit}
 Angle: {angle}
+Approach Role: {role}
 """
 
     def clean_draft(text: str) -> str:
         import re
+        # Fix any duplicated protocols
+        text = re.sub(r'https?://https?://', 'https://', text)
         # Strictly enforce Hrishith's true GitHub profile: https://github.com/hrishith30
-        text = re.sub(r'https?://github\.com/[A-Za-z0-9_-]+', 'https://github.com/hrishith30', text)
-        text = re.sub(r'\bgithub\.com/[A-Za-z0-9_-]+', 'https://github.com/hrishith30', text)
+        text = re.sub(r'https?://github\.com/[A-Za-z0-9_.-]+', 'https://github.com/hrishith30', text)
+        text = re.sub(r'(?<!https://)(?<!http://)\bgithub\.com/[A-Za-z0-9_.-]+', 'https://github.com/hrishith30', text)
+        text = re.sub(r'https?://https?://', 'https://', text)
         return text
 
-    user_prompt = f"Draft note to {role} at {company} regarding {title}. Plain text only, 80-120 words."
+    user_prompt = f"Draft personal and professional outreach note to {role} at {company} regarding {title}. Plain text, 75-105 words, starting with 'Hi [Name],'"
 
     if gemini_client.is_configured:
         generated = gemini_client.generate_text(system_instruction, user_prompt, timeout=25)
         if generated:
             return clean_draft(generated)
 
-    # Deterministic fallback draft template (80-120 words) matching Hrishith's resume
+    # Deterministic fallback draft template (75-105 words) matching Hrishith's resume
     if stype == "BUY_SIGNAL":
         draft = (
-            f"Hi {role},\n\n"
-            f"I saw {company} is hiring for a {title}. As an AI-focused Forward Deployed Engineer, I specialize "
-            f"in designing, developing, and deploying production GenAI systems, autonomous agent workflows, and RAG architectures "
-            f"in Python, TypeScript, React, and GCP.\n\n"
-            f"In my recent work, I built and shipped production AI agent workflows and prompt pipelines using Claude Code, Cursor, "
-            f"and GCP directly alongside startup leadership for a healthcare-adjacent platform.\n\n"
-            f"I'd love to bring this hands-on engineering execution to your team at {company}. Open to a brief technical chat this week?\n\n"
+            f"Hi [Name],\n\n"
+            f"I saw the {title} opening at {company} and wanted to reach out directly. "
+            f"As the Founding Software Developer at Cure Culture, I've spent the past year building and shipping production AI agent workflows, "
+            f"RAG systems, and full-stack backend services in Python, TypeScript, and GCP directly with our founders.\n\n"
+            f"Given {company}'s focus on {title.lower()} and shipping rapid deployments, I'd love to help you build and scale reliable AI systems "
+            f"without onboarding ramp-up.\n\n"
+            f"Would you be open to a quick 10-minute technical chat sometime this week?\n\n"
             f"{draft_sig}"
         )
     else:
         draft = (
-            f"Hi {role},\n\n"
-            f"I came across the {title} opening at {company}. With a Master's in Computer Science and hands-on experience "
-            f"deploying production GenAI systems, vector search RAG architectures, and autonomous AI agents, I'd love to connect.\n\n"
-            f"I specialize in bridging the gap between cutting-edge LLMs and reliable production software using Python, Django, React, and GCP.\n\n"
-            f"Would you be open to a brief conversation regarding how I can contribute to your engineering team at {company}?\n\n"
+            f"Hi [Name],\n\n"
+            f"I noticed {company} is hiring for a {title} and wanted to connect directly. "
+            f"With a Master's in Computer Science and hands-on experience shipping production GenAI systems, autonomous AI agents, and RAG architectures "
+            f"using Python, Django, and GCP, I specialize in bridging cutting-edge LLMs with dependable backend systems.\n\n"
+            f"I'd love to contribute to your engineering goals at {company}. Would you have 10 minutes for a brief chat this week?\n\n"
             f"{draft_sig}"
         )
 

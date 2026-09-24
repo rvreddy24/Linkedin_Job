@@ -29,8 +29,55 @@ class AutoBot(commands.Bot):
         except Exception as e:
             print(f"Error syncing guild commands: {e}", flush=True)
 
+    async def on_interaction(self, interaction: discord.Interaction):
+        # Global persistent handler for Draft Outreach buttons (works across restarts and on old cards)
+        if interaction.type == discord.InteractionType.component:
+            custom_id = interaction.data.get("custom_id", "")
+            if custom_id.startswith("btn_draft:") or custom_id == "btn_draft":
+                await interaction.response.defer(ephemeral=False)
+                listing_id = None
+                if custom_id.startswith("btn_draft:"):
+                    listing_id = custom_id.split("btn_draft:", 1)[1]
+                elif interaction.message and interaction.message.embeds:
+                    footer = interaction.message.embeds[0].footer.text or ""
+                    m = re.search(r"ID:\s*(\S+)", footer)
+                    if m:
+                        listing_id = m.group(1)
+
+                if listing_id:
+                    await execute_draft_response(interaction, listing_id)
+                else:
+                    await interaction.followup.send("⚠️ Could not detect listing ID from this card. Try using `/draft listing_id:...`.")
+                return
+
+        await super().on_interaction(interaction)
+
 
 bot = AutoBot(command_prefix="!", intents=intents, application_id=1552147522351276153)
+
+
+async def execute_draft_response(interaction: discord.Interaction, listing_id: str):
+    """Generate and display copy-pasteable outreach note for a listing."""
+    listing = storage.lookup_pipeline(listing_id)
+    if not listing:
+        await interaction.followup.send(f"❌ Error: Listing `{listing_id}` not found in Pipeline.")
+        return
+
+    company = listing.get("company", "Company")
+    title = listing.get("title", "Role")
+
+    # Generate draft asynchronously (using personal & professional prompt)
+    draft = await asyncio.to_thread(draft_outreach, listing)
+    storage.update_pipeline_touch(listing_id, status="drafted", draft=draft)
+    storage.record_touch(company, listing_id, action="draft", preview=draft[:100])
+
+    words = len(draft.split())
+    reply_text = (
+        f"📝 **Outreach Draft for {company} — {title}** ({words} words)\n"
+        f"*(Ready to copy & paste into LinkedIn message, InMail, or email)*\n\n"
+        f"```text\n{draft}\n```"
+    )
+    await interaction.followup.send(reply_text)
 
 
 class HotCardActionView(discord.ui.View):
@@ -41,42 +88,19 @@ class HotCardActionView(discord.ui.View):
         self.listing_id = listing_id
         self.company = company
 
-        # URL Button 1: Open Posting
+        # Action Button 1: Draft Outreach (Persistent unique ID per card)
+        draft_btn = discord.ui.Button(
+            label="✍️ Draft Outreach",
+            style=discord.ButtonStyle.primary,
+            custom_id=f"btn_draft:{listing_id}",
+        )
+        self.add_item(draft_btn)
+
+        # URL Button 2: Open Posting
         self.add_item(discord.ui.Button(label="🔗 Open Posting", url=job_url))
 
-        # URL Button 2: Find Contact on LinkedIn
+        # URL Button 3: Find Contact on LinkedIn
         self.add_item(discord.ui.Button(label="🔎 Find Contact", url=contact_url))
-
-    @discord.ui.button(label="✍️ Draft Outreach", style=discord.ButtonStyle.primary, custom_id="btn_draft")
-    async def draft_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer(ephemeral=False)
-
-        listing = storage.lookup_pipeline(self.listing_id)
-        if not listing:
-            await interaction.followup.send(f"❌ Error: Listing `{self.listing_id}` not found in Pipeline.")
-            return
-
-        company = listing.get("company", self.company)
-
-        # 21-day company cooldown check
-        is_blocked, notice = check_cooldown(company)
-        if is_blocked:
-            storage.update_pipeline_touch(self.listing_id, status="cooldown")
-            await interaction.followup.send(notice or f"Cooldown active for {company}.")
-            return
-
-        # Generate Gemini draft asynchronously
-        draft = await asyncio.to_thread(draft_outreach, listing)
-        storage.update_pipeline_touch(self.listing_id, status="drafted", draft=draft)
-        storage.record_touch(company, self.listing_id, action="draft", preview=draft[:100])
-
-        words = len(draft.split())
-        reply_text = (
-            f"📝 **Outreach Draft for {company}** ({words} words)\n"
-            f"*Copy and paste directly into LinkedIn or email:*\n\n"
-            f"```text\n{draft}\n```"
-        )
-        await interaction.followup.send(reply_text)
 
 
 def create_hot_embed(item_data: dict, listing_id: str) -> discord.Embed:
@@ -240,25 +264,7 @@ async def slash_hot(interaction: discord.Interaction):
 async def slash_draft(interaction: discord.Interaction, listing_id: str):
     await interaction.response.defer(thinking=True)
     try:
-        listing = storage.lookup_pipeline(listing_id)
-        if not listing:
-            await interaction.followup.send(f"❌ Error: Listing `{listing_id}` not found in Pipeline.")
-            return
-
-        company = listing.get("company", "")
-        is_blocked, notice = check_cooldown(company)
-        if is_blocked:
-            await interaction.followup.send(notice or f"Cooldown active for {company}.")
-            return
-
-        draft = await asyncio.to_thread(draft_outreach, listing)
-        storage.update_pipeline_touch(listing_id, status="drafted", draft=draft)
-        storage.record_touch(company, listing_id, action="draft", preview=draft[:100])
-
-        words = len(draft.split())
-        await interaction.followup.send(
-            f"📝 **Outreach Draft for {company}** ({words} words)\n```text\n{draft}\n```"
-        )
+        await execute_draft_response(interaction, listing_id)
     except Exception as e:
         print(f"[slash_draft] Error: {e}", flush=True)
         await interaction.followup.send(f"⚠️ Error drafting outreach: {e}")
