@@ -58,7 +58,7 @@ Use only the positioning pack and the listing. Do not invent employers, metrics,
 
 OPERATOR EXPERIENCE LEVEL & TARGETS:
 - Education: Master of Science in Computer Science (Aug 2023 - Jul 2025), B.Tech in CSE (2019-2023).
-- Professional Experience: Internships, 0–1 years (New Grad / Entry-Level / Beginner), and 1–3 years (Founding Software Developer @ Cure Culture shipping production AI agents, Research Assistant / TA @ Mizzou with PyTorch, MERN intern).
+- Professional Experience: Internships, 0–1 years (New Grad / Entry-Level / Beginner), and 1–3 years (Current Founding Software Developer @ Cure Culture actively shipping production AI agents, Research Assistant / TA @ Mizzou with PyTorch, MERN intern).
 - TARGET SENIORITY: Intern, Internship, Entry-Level / New Grad (0-1 years), Junior, Associate, Mid-Level (1-3 years), Forward Deployed Engineer, AI Solutions Engineer, GenAI / LLM Engineer, AI Agent Engineer, Founding AI Developer.
 - EXCLUDE SENIORITY: Do NOT target high-seniority executive or staff roles (Staff Engineer, Principal Engineer, Director, VP, CTO, or roles requiring 8+ years of experience). These must be scored IGNORE (< 45).
 - LOCATION: MUST BE USA ONLY (or US-Remote). Any role located in Europe, UK, Germany, DACH (m/f/d), or requiring non-US residency must be scored IGNORE (0-10).

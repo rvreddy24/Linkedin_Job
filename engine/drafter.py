@@ -102,7 +102,7 @@ CRITICAL STYLE & TONE GUIDELINES:
 - NEVER start with robotic phrases like "As an AI-focused engineer...", "I am writing to express my interest in...", or "Recently, at an AI-enabled mental health platform...".
 - {salutation_guide}
 - ZERO PLACEHOLDERS: Never output placeholders like "[Name]", "[Company]", or brackets. Every name and company must be concrete and 100% copy-paste ready.
-- Naturally reference Hrishith's real engineering work as Founding Software Developer at Cure Culture, where he built and deployed production AI agent workflows, RAG pipelines, and full-stack backend services in Python, TypeScript, and GCP directly with founders.
+- CURRENT ROLE AT CURE CULTURE: Hrishith is CURRENTLY the Founding Software Developer at Cure Culture (Nov 2025 – Present). He is actively working and building there right now. ALWAYS write about this role in the present tense (e.g. "As Founding Software Developer at Cure Culture, I build and ship production AI agent workflows...", "In my current role at Cure Culture, I work directly with founders to..."). NEVER say "I served as", "I worked at", "I was", or use past tense for Cure Culture.
 - Connect specifically to {company}'s domain and {angle}.
 - Show immediate value: explain how he can step in, build, and deploy production AI solutions rapidly without onboarding overhead.
 - End with a low-friction call to action: "Would you be open to a quick 10-minute technical chat sometime this week?"
@@ -137,6 +137,12 @@ Target Recipient: {target_entity}
         fallback_salutation = target_name if target_name else team_name
         text = re.sub(r'\[Name\]', fallback_salutation, text)
         text = re.sub(r'Hi \[Hiring Manager\]', f"Hi {team_name}", text, flags=re.I)
+        # Enforce present tense for current role at Cure Culture (he is currently working there)
+        text = re.sub(r'\b(?:At Cure Culture, )?I served as (?:the |a )?Founding Software Developer\b', 'As Founding Software Developer at Cure Culture, I', text, flags=re.I)
+        text = re.sub(r'\bI served as\b', 'I work as', text, flags=re.I)
+        text = re.sub(r'\bI worked at Cure Culture\b', 'In my current role at Cure Culture, I work', text, flags=re.I)
+        text = re.sub(r'\bAt Cure Culture, I worked\b', 'At Cure Culture, I work', text, flags=re.I)
+        text = re.sub(r'\bAt Cure Culture, I translated\b', 'At Cure Culture, I translate', text, flags=re.I)
         return text
 
     user_prompt = f"Draft personal and professional outreach note to {target_entity} regarding {title} at {company}. Plain text, 75-105 words, starting with '{salutation_start}'"
@@ -151,9 +157,9 @@ Target Recipient: {target_entity}
         draft = (
             f"{salutation_start}\n\n"
             f"I saw the {title} opening at {company} and wanted to reach out directly. "
-            f"As the Founding Software Developer at Cure Culture, I've spent the past year building and shipping production AI agent workflows, "
-            f"RAG systems, and full-stack backend services in Python, TypeScript, and GCP directly with our founders.\n\n"
-            f"Given {company}'s focus on {title.lower()} and shipping rapid deployments, I'd love to help you build and scale reliable AI systems "
+            f"As Founding Software Developer at Cure Culture, I currently build and ship production AI agent workflows, "
+            f"RAG systems, and full-stack backend services in Python, TypeScript, and GCP directly alongside our founders.\n\n"
+            f"Given {company}'s focus on {title.lower()} and rapid deployment, I'd love to help your team build and scale reliable AI systems "
             f"without onboarding ramp-up.\n\n"
             f"Would you be open to a quick 10-minute technical chat sometime this week?\n\n"
             f"{draft_sig}"
@@ -162,8 +168,8 @@ Target Recipient: {target_entity}
         draft = (
             f"{salutation_start}\n\n"
             f"I noticed {company} is hiring for a {title} and wanted to connect directly. "
-            f"With a Master's in Computer Science and hands-on experience shipping production GenAI systems, autonomous AI agents, and RAG architectures "
-            f"using Python, Django, and GCP, I specialize in bridging cutting-edge LLMs with dependable backend systems.\n\n"
+            f"As Founding Software Developer at Cure Culture, I actively build and deploy production GenAI systems, autonomous AI agents, and RAG architectures "
+            f"using Python, Django, and GCP, bridging cutting-edge LLMs with dependable backend systems.\n\n"
             f"I'd love to contribute to your engineering goals at {company}. Would you have 10 minutes for a brief chat this week?\n\n"
             f"{draft_sig}"
         )

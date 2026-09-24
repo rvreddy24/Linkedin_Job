@@ -51,12 +51,12 @@
   ],
   "proof_points": [
     {
-      "role": "Founding Software Developer",
+      "role": "Founding Software Developer (Current)",
       "company": "Cure Culture",
       "period": "Nov 2025 – Present",
-      "problem": "Startup leadership needed to translate privacy-sensitive clinical requirements into shipped GenAI functionality rapidly in an AI-enabled mental health and wellness platform.",
-      "what_you_did": "Built AI agent and prompt-engineering workflows using Claude Code, Cursor, and AI coding agents. Designed and implemented backend services, REST APIs, and data pipelines with Python, Django, PostgreSQL, and GCP with Terraform, Docker, and CI/CD.",
-      "outcome": "Shipped production-ready, privacy-sensitive AI features directly alongside founders with enterprise reliability and modern TypeScript/React frontend."
+      "problem": "Startup leadership needs to translate privacy-sensitive clinical requirements into shipped GenAI functionality rapidly in an AI-enabled mental health and wellness platform.",
+      "what_you_did": "Builds AI agent and prompt-engineering workflows using Claude Code, Cursor, and AI coding agents. Designs and implements backend services, REST APIs, and data pipelines with Python, Django, PostgreSQL, and GCP with Terraform, Docker, and CI/CD.",
+      "outcome": "Actively ships production-ready, privacy-sensitive AI features directly alongside founders with enterprise reliability and modern TypeScript/React frontend."
     },
     {
       "role": "AI Project Creator",
