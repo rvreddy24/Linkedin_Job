@@ -236,6 +236,13 @@ def test_draft_word_count_and_no_resume_dump():
     assert "Curriculum Vitae" not in draft
     assert "GPA" not in draft
     assert "References available upon request" not in draft
+    assert "Hi Figma Hiring Team," in draft
+    assert "[Name]" not in draft
+
+    # With name -> addresses recipient directly
+    draft_named = draft_outreach(listing_data, recipient_name="Sarah")
+    assert "Hi Sarah," in draft_named
+    assert "[Name]" not in draft_named
 
 
 def test_discord_embed_formatting():

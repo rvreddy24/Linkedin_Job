@@ -45,11 +45,12 @@ def check_cooldown(company_name: str) -> Tuple[bool, Optional[str]]:
     return False, None
 
 
-def draft_outreach(listing_data: Dict[str, Any]) -> str:
+def draft_outreach(listing_data: Dict[str, Any], recipient_name: Optional[str] = None) -> str:
     """
-    Draft an 80-130 word outreach note using Gemini (or fallback template).
-    Uses at most ONE proof point.
+    Draft an 75-105 word outreach note using Gemini (or fallback template).
+    Addresses the recipient directly by name if provided or discovered in description.
     """
+    import re
     company = listing_data.get("company", "")
     title = listing_data.get("title", "")
     stype = listing_data.get("type", "BUY_SIGNAL")
@@ -58,6 +59,30 @@ def draft_outreach(listing_data: Dict[str, Any]) -> str:
     angle = listing_data.get("angle", "")
     concern = listing_data.get("concern", "")
     role = listing_data.get("approach_role") or "VP of Engineering / Head of AI"
+
+    # Determine recipient name
+    target_name = (recipient_name or "").strip()
+    if not target_name:
+        desc = listing_data.get("description", "")
+        m = re.search(r'\b(?:reach out to|contact|report(?:ing)? to|hiring manager:?|recruiter:?)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', desc, re.I)
+        if m:
+            target_name = m.group(1).split()[0]
+
+    if target_name:
+        salutation_start = f"Hi {target_name},"
+        target_entity = target_name
+        salutation_guide = (
+            f'ALWAYS begin the message with: "{salutation_start}" and write this message directly to {target_name} '
+            f'({role} at {company}). Address {target_name} directly as a peer engineer.'
+        )
+    else:
+        team_name = f"{company} Hiring Team" if company else "Hiring Team"
+        salutation_start = f"Hi {team_name},"
+        target_entity = team_name
+        salutation_guide = (
+            f'No specific poster name is provided, so ALWAYS begin the message with: "{salutation_start}". '
+            f'NEVER use placeholders like "[Name]" or brackets. Address the note directly to the {team_name}.'
+        )
 
     proof_points = POSITIONING_CONFIG.get("proof_points", [])
     # Pick at most 1 proof point
@@ -70,12 +95,13 @@ def draft_outreach(listing_data: Dict[str, Any]) -> str:
 
     draft_sig = POSITIONING_CONFIG.get("draft_signature", "Best regards,\n[Your Name]")
 
-    system_instruction = f"""You write personal, professional, engineer-to-engineer direct outreach notes for Hrishith Raj Reddy Malgireddy to send to founders, engineering leaders, or hiring managers on LinkedIn and email regarding the {title} role at {company}.
+    system_instruction = f"""You write personal, professional, engineer-to-engineer direct outreach notes for Hrishith Raj Reddy Malgireddy to send on LinkedIn and email regarding the {title} role at {company}.
 
 CRITICAL STYLE & TONE GUIDELINES:
 - Write like a real, competent peer engineer reaching out directly (1-on-1 direct message), NOT an automated bot or generic cover letter.
 - NEVER start with robotic phrases like "As an AI-focused engineer...", "I am writing to express my interest in...", or "Recently, at an AI-enabled mental health platform...".
-- ALWAYS begin the message with: "Hi [Name]," (with [Name] as a placeholder so the operator can fill in the recipient's name).
+- {salutation_guide}
+- ZERO PLACEHOLDERS: Never output placeholders like "[Name]", "[Company]", or brackets. Every name and company must be concrete and 100% copy-paste ready.
 - Naturally reference Hrishith's real engineering work as Founding Software Developer at Cure Culture, where he built and deployed production AI agent workflows, RAG pipelines, and full-stack backend services in Python, TypeScript, and GCP directly with founders.
 - Connect specifically to {company}'s domain and {angle}.
 - Show immediate value: explain how he can step in, build, and deploy production AI solutions rapidly without onboarding overhead.
@@ -96,19 +122,24 @@ Role: {title} @ {company} ({stype} - score {score})
 Fit: {fit}
 Angle: {angle}
 Approach Role: {role}
+Target Recipient: {target_entity}
 """
 
     def clean_draft(text: str) -> str:
-        import re
         # Fix any duplicated protocols
         text = re.sub(r'https?://https?://', 'https://', text)
         # Strictly enforce Hrishith's true GitHub profile: https://github.com/hrishith30
         text = re.sub(r'https?://github\.com/[A-Za-z0-9_.-]+', 'https://github.com/hrishith30', text)
         text = re.sub(r'(?<!https://)(?<!http://)\bgithub\.com/[A-Za-z0-9_.-]+', 'https://github.com/hrishith30', text)
         text = re.sub(r'https?://https?://', 'https://', text)
+        # Clean any accidental placeholders
+        team_name = f"{company} Hiring Team" if company else "Hiring Team"
+        fallback_salutation = target_name if target_name else team_name
+        text = re.sub(r'\[Name\]', fallback_salutation, text)
+        text = re.sub(r'Hi \[Hiring Manager\]', f"Hi {team_name}", text, flags=re.I)
         return text
 
-    user_prompt = f"Draft personal and professional outreach note to {role} at {company} regarding {title}. Plain text, 75-105 words, starting with 'Hi [Name],'"
+    user_prompt = f"Draft personal and professional outreach note to {target_entity} regarding {title} at {company}. Plain text, 75-105 words, starting with '{salutation_start}'"
 
     if gemini_client.is_configured:
         generated = gemini_client.generate_text(system_instruction, user_prompt, timeout=25)
@@ -118,7 +149,7 @@ Approach Role: {role}
     # Deterministic fallback draft template (75-105 words) matching Hrishith's resume
     if stype == "BUY_SIGNAL":
         draft = (
-            f"Hi [Name],\n\n"
+            f"{salutation_start}\n\n"
             f"I saw the {title} opening at {company} and wanted to reach out directly. "
             f"As the Founding Software Developer at Cure Culture, I've spent the past year building and shipping production AI agent workflows, "
             f"RAG systems, and full-stack backend services in Python, TypeScript, and GCP directly with our founders.\n\n"
@@ -129,7 +160,7 @@ Approach Role: {role}
         )
     else:
         draft = (
-            f"Hi [Name],\n\n"
+            f"{salutation_start}\n\n"
             f"I noticed {company} is hiring for a {title} and wanted to connect directly. "
             f"With a Master's in Computer Science and hands-on experience shipping production GenAI systems, autonomous AI agents, and RAG architectures "
             f"using Python, Django, and GCP, I specialize in bridging cutting-edge LLMs with dependable backend systems.\n\n"

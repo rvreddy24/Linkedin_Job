@@ -19,6 +19,24 @@ from engine.discord_webhook import format_discord_embed
 intents = discord.Intents.default()
 
 
+class DraftOutreachModal(discord.ui.Modal, title="Draft Personal Outreach Note"):
+    name_input = discord.ui.TextInput(
+        label="Job Poster / Hiring Lead Name (Optional)",
+        placeholder="e.g. Alex, David, Sarah (or leave blank)",
+        required=False,
+        max_length=50,
+    )
+
+    def __init__(self, listing_id: str):
+        super().__init__()
+        self.listing_id = listing_id
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=False)
+        poster_name = self.name_input.value.strip() or None
+        await execute_draft_response(interaction, self.listing_id, recipient_name=poster_name)
+
+
 class AutoBot(commands.Bot):
     async def setup_hook(self):
         try:
@@ -30,11 +48,10 @@ class AutoBot(commands.Bot):
             print(f"Error syncing guild commands: {e}", flush=True)
 
     async def on_interaction(self, interaction: discord.Interaction):
-        # Global persistent handler for Draft Outreach buttons (works across restarts and on old cards)
+        # Global persistent handler for Draft Outreach buttons (pops up modal for poster name)
         if interaction.type == discord.InteractionType.component:
             custom_id = interaction.data.get("custom_id", "")
             if custom_id.startswith("btn_draft:") or custom_id == "btn_draft":
-                await interaction.response.defer(ephemeral=False)
                 listing_id = None
                 if custom_id.startswith("btn_draft:"):
                     listing_id = custom_id.split("btn_draft:", 1)[1]
@@ -45,9 +62,9 @@ class AutoBot(commands.Bot):
                         listing_id = m.group(1)
 
                 if listing_id:
-                    await execute_draft_response(interaction, listing_id)
+                    await interaction.response.send_modal(DraftOutreachModal(listing_id))
                 else:
-                    await interaction.followup.send("⚠️ Could not detect listing ID from this card. Try using `/draft listing_id:...`.")
+                    await interaction.response.send_message("⚠️ Could not detect listing ID from this card. Try using `/draft listing_id:...`.", ephemeral=True)
                 return
 
         await super().on_interaction(interaction)
@@ -56,8 +73,8 @@ class AutoBot(commands.Bot):
 bot = AutoBot(command_prefix="!", intents=intents, application_id=1552147522351276153)
 
 
-async def execute_draft_response(interaction: discord.Interaction, listing_id: str):
-    """Generate and display copy-pasteable outreach note for a listing."""
+async def execute_draft_response(interaction: discord.Interaction, listing_id: str, recipient_name: Optional[str] = None):
+    """Generate and display copy-pasteable outreach note for a listing addressed to recipient_name."""
     listing = storage.lookup_pipeline(listing_id)
     if not listing:
         await interaction.followup.send(f"❌ Error: Listing `{listing_id}` not found in Pipeline.")
@@ -66,14 +83,16 @@ async def execute_draft_response(interaction: discord.Interaction, listing_id: s
     company = listing.get("company", "Company")
     title = listing.get("title", "Role")
 
-    # Generate draft asynchronously (using personal & professional prompt)
-    draft = await asyncio.to_thread(draft_outreach, listing)
+    # Generate draft asynchronously (using personal & professional prompt addressed to recipient_name)
+    draft = await asyncio.to_thread(draft_outreach, listing, recipient_name)
     storage.update_pipeline_touch(listing_id, status="drafted", draft=draft)
     storage.record_touch(company, listing_id, action="draft", preview=draft[:100])
 
     words = len(draft.split())
+    team_name = f"{company} Hiring Team"
+    recipient_tag = f" — addressed to **{recipient_name}**" if recipient_name else f" — addressed to **{team_name}**"
     reply_text = (
-        f"📝 **Outreach Draft for {company} — {title}** ({words} words)\n"
+        f"📝 **Outreach Draft for {company} ({title})**{recipient_tag} ({words} words)\n"
         f"*(Ready to copy & paste into LinkedIn message, InMail, or email)*\n\n"
         f"```text\n{draft}\n```"
     )
@@ -260,11 +279,15 @@ async def slash_hot(interaction: discord.Interaction):
         await interaction.followup.send(embed=embed, view=view)
 
 
-@bot.tree.command(name="draft", description="Generate a tailored outreach note for a job listing")
-async def slash_draft(interaction: discord.Interaction, listing_id: str):
+@bot.tree.command(name="draft", description="Generate tailored outreach note (optionally provide job poster's name)")
+@discord.app_commands.describe(
+    listing_id="The job listing ID (e.g. linkedin:4470667578 or 4470667578)",
+    name="Job poster or hiring manager's name (e.g. Alex, David, Sarah)",
+)
+async def slash_draft(interaction: discord.Interaction, listing_id: str, name: Optional[str] = None):
     await interaction.response.defer(thinking=True)
     try:
-        await execute_draft_response(interaction, listing_id)
+        await execute_draft_response(interaction, listing_id, recipient_name=name)
     except Exception as e:
         print(f"[slash_draft] Error: {e}", flush=True)
         await interaction.followup.send(f"⚠️ Error drafting outreach: {e}")
@@ -372,7 +395,7 @@ async def cmd_hot(ctx: commands.Context):
 
 
 @bot.command(name="draft")
-async def cmd_draft(ctx: commands.Context, listing_id: str):
+async def cmd_draft(ctx: commands.Context, listing_id: str, *, name: Optional[str] = None):
     listing = storage.lookup_pipeline(listing_id)
     if not listing:
         await ctx.send(f"❌ Error: Listing `{listing_id}` not found in Pipeline.")
@@ -384,13 +407,17 @@ async def cmd_draft(ctx: commands.Context, listing_id: str):
         await ctx.send(notice or f"Cooldown active for {company}.")
         return
 
-    draft = draft_outreach(listing)
+    draft = draft_outreach(listing, recipient_name=name)
     storage.update_pipeline_touch(listing_id, status="drafted", draft=draft)
     storage.record_touch(company, listing_id, action="draft", preview=draft[:100])
 
     words = len(draft.split())
+    team_name = f"{company} Hiring Team"
+    recipient_tag = f" — addressed to **{name}**" if name else f" — addressed to **{team_name}**"
     await ctx.send(
-        f"📝 **Outreach Draft for {company}** ({words} words)\n```text\n{draft}\n```"
+        f"📝 **Outreach Draft for {company}**{recipient_tag} ({words} words)\n"
+        f"*(Ready to copy & paste into LinkedIn message, InMail, or email)*\n\n"
+        f"```text\n{draft}\n```"
     )
 
 
