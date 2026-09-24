@@ -75,7 +75,9 @@ Position Hrishith as an AI-focused Forward Deployed Engineer with experience des
 Do not invent metrics or companies not in the proof point.
 Use at most ONE proof point from the candidate memory pack.
 Tone: Technical, direct, engineer-to-engineer / founder-to-engineer.
-80-120 words. Plain text only. End with Hrishith's signature and links.
+80-120 words. Plain text only.
+MANDATORY SIGNATURE: You must conclude the note with this exact signature block and link:
+{draft_sig}
 
 CANDIDATE POSITIONING:
 {build_positioning_pack()}
@@ -89,12 +91,19 @@ Fit: {fit}
 Angle: {angle}
 """
 
+    def clean_draft(text: str) -> str:
+        import re
+        # Strictly enforce Hrishith's true GitHub profile: https://github.com/hrishith30
+        text = re.sub(r'https?://github\.com/[A-Za-z0-9_-]+', 'https://github.com/hrishith30', text)
+        text = re.sub(r'\bgithub\.com/[A-Za-z0-9_-]+', 'https://github.com/hrishith30', text)
+        return text
+
     user_prompt = f"Draft note to {role} at {company} regarding {title}. Plain text only, 80-120 words."
 
     if gemini_client.is_configured:
         generated = gemini_client.generate_text(system_instruction, user_prompt, timeout=25)
         if generated:
-            return generated
+            return clean_draft(generated)
 
     # Deterministic fallback draft template (80-120 words) matching Hrishith's resume
     if stype == "BUY_SIGNAL":
@@ -118,4 +127,4 @@ Angle: {angle}
             f"{draft_sig}"
         )
 
-    return draft
+    return clean_draft(draft)
